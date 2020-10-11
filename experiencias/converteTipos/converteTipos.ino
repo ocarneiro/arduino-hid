@@ -23,6 +23,11 @@ void resetaMensagem() {
 void setup() {
     Serial.begin(9600);
     Serial.println("--- Arduino ligado ---");
+    Serial.print("<x");
+    int a = 123;
+    Serial.print(a);
+    Serial.println("y>");
+    
     resetaMensagem();
 }
 

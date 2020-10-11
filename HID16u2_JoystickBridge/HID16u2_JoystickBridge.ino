@@ -38,7 +38,7 @@ void resetaMensagem() {
 void setup() {
   // Inicia a comunicação com o Arduino (ATMega)
   Serial1.begin(115200);
-  Serial.begin(9600); // debug
+  // Serial.begin(9600); // debug
   resetaMensagem();
 
   // Reseta o joystick
@@ -50,8 +50,7 @@ void setup() {
  * ações para o Joystick
  */
 void parse() {
-    Serial.println(mensagem);
-    Gamepad.press(3);
+    // Serial.println(mensagem);
     // se o primeiro valor for 1, aperta botão 1
     if (mensagem[0] == '1') {
         Gamepad.press(1);
@@ -66,6 +65,20 @@ void parse() {
         Gamepad.release(2);
     }
 
+    char valorX[3];
+    valorX[0] = mensagem[3];
+    valorX[1] = mensagem[4];
+    valorX[2] = mensagem[5];
+    int16_t valorXint = atoi(valorX);
+    
+    if (mensagem[2] == '1') {
+        valorXint = 0 - valorXint;
+    }
+    valorXint = valorXint * 50;
+
+    // Serial.println(valorXint);
+    Gamepad.xAxis(valorXint);
+
     // efetiva a ação definida
     Gamepad.write();
 }
@@ -77,11 +90,16 @@ void loop() {
     while (Serial1.available() > 0) {
         recebido = Serial1.read();
         if (recebendo) {
-            if (recebido == simboloFinal) {
+            if (recebido == simboloInicial) {
+                // aqui houve algum erro, o símbolo inicial não deveria
+                // ser recebido, então inicia de novo.
+                resetaMensagem();
+                indice = 0;
+            } else if (recebido == simboloFinal) {
                 recebendo = false;
                 mensagemPronta = true;
             } else {
-                mensagem[indice] = recebido;
+                mensagem[indice] = (char) recebido;
                 indice += 1; // aumenta 1 no índice
             }
         } else {
