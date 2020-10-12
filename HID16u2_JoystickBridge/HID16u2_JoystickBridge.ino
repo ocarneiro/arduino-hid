@@ -1,18 +1,13 @@
 /*
  * Converte mensagens recebidas do ArduinoUno para comandos do Joystick
- * As mensagens devem ser recebidas no formato <012345>.
- * O primeiro valor é referente a um botão.
- * <100000> indica que o primeiro botão deve ser apertado.
- * O segundo valor é referente ao segundo botão.
- * <010000> indica que o segundo valor deve ser apertado.
- * O terceiro valor indica a direção do potenciômetro:
- * 0 = neutro
- * 1 = esquerda
- * 2 = direita
- * Os últimos 3 valores indicam o valor do potenciômetro.
- * <000000> indica que o potenciômetro está na posição neutra.
- * <001512> indica que o potenciômetro está apontando para esquerda.
- * <002512> indica que o potenciômetro está apontando para a direita.
+ * As mensagens devem ser recebidas no formato <0123452345><bbdvvvdvvv>.
+ * b = estado de um botão (0 = solto; 1 = pressionado)
+ * d = direção horizontal (0 = neutro, 1 = esquerda, 2 = direita)
+ *     ou vertical (0 = neutro, 1 = cima, 2 = baixo)
+ * vvv = valor ou intensidade. 0 = mínimo, 512 = máximo.
+ * Exemplos:
+ * <0020271164> - botões soltos, direita 27, cima 164
+ * <1111432325> - botões pressionados, esquerda 143, baixo 325
 */
 
 #include "HID-Project.h"
@@ -20,8 +15,8 @@
 const char simboloInicial = '<';
 const char simboloFinal = '>';
 
-const String valorInicial = "000000";
-const int tamanhoMaximo = 7; // tamanho real é isso menos 1
+const String valorInicial = "0000000000";
+const int tamanhoMaximo = 11; // tamanho real é isso menos 1
 char mensagem[tamanhoMaximo];
 
 boolean recebendo = false;
@@ -58,26 +53,36 @@ void parse() {
         Gamepad.release(1);
     }
 
-    // se o segundo valor for 1, aperta botão 1
+    // se o segundo valor for 1, aperta botão 2
     if (mensagem[1] == '1') {
         Gamepad.press(2);
     } else if (mensagem[1] == '0') {
         Gamepad.release(2);
     }
 
-    char valorX[3];
-    valorX[0] = mensagem[3];
-    valorX[1] = mensagem[4];
-    valorX[2] = mensagem[5];
-    int16_t valorXint = atoi(valorX);
+    char valor[3];
+    valor[0] = mensagem[3];
+    valor[1] = mensagem[4];
+    valor[2] = mensagem[5];
+    int16_t valorInt = atoi(valor);
     
     if (mensagem[2] == '1') {
-        valorXint = 0 - valorXint;
+        valorInt = 0 - valorInt;
     }
-    valorXint = valorXint * 50;
+    valorInt = valorInt * 50;
+    Gamepad.xAxis(valorInt);
 
-    // Serial.println(valorXint);
-    Gamepad.xAxis(valorXint);
+    valor[0] = mensagem[7];
+    valor[1] = mensagem[8];
+    valor[2] = mensagem[9];
+    valorInt = atoi(valor);
+    
+    if (mensagem[6] == '1') {
+        valorInt = 0 - valorInt;
+    }
+    valorInt = valorInt * 50;
+    // Serial.println(valorInt);
+    Gamepad.yAxis(valorInt);
 
     // efetiva a ação definida
     Gamepad.write();

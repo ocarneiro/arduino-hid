@@ -9,7 +9,8 @@ const int pinLed = LED_BUILTIN;
 const int botaoVermelho = 3;
 const int botaoVerde = 2;
 
-const int potenciometro = A0;
+const int potVolante = A0;
+const int potAcelera = A1;
 
 void setup() {
   pinMode(pinLed, OUTPUT);
@@ -28,6 +29,22 @@ void setup() {
   digitalWrite(pinLed, LOW);
 }
 
+void geraSaida(char saida[], int potenciometro){
+    char direcao = '0';
+    int valorPotenciometro = analogRead(potenciometro);
+    int valorDirecao = 0;
+    if (valorPotenciometro > 512) {
+      direcao = '2';
+      valorDirecao = valorPotenciometro - 512;
+    } else if (valorPotenciometro < 512) {
+      direcao = '1';
+      valorDirecao = 512 - valorPotenciometro;
+    }
+    // cria uma saída com zeros à esquerda
+    sprintf(saida, "%c%03d", direcao, valorDirecao);
+}
+
+
 
 void loop() {
 
@@ -40,25 +57,16 @@ void loop() {
       valorBotaoVerde = '1';
     }
 
-    char direcao = '0';
-    int valorPotenciometro = analogRead(potenciometro);
-    int valorDirecao = 0;
-    if (valorPotenciometro > 512) {
-      direcao = '2';
-      valorDirecao = valorPotenciometro - 512;
-    } else if (valorPotenciometro < 512) {
-      direcao = '1';
-      valorDirecao = 512 - valorPotenciometro;
-    }
-    // cria uma saída com zeros à esquerda
-    char *saida = malloc(4);
-    sprintf(saida, "%03d", valorDirecao);
-    
+    char valorVolante[5];
+    geraSaida(valorVolante, potVolante);
+    char valorAcelera[5];
+    geraSaida(valorAcelera, potAcelera);
+
     Serial.write("<");
     Serial.write(valorBotaoVermelho);
     Serial.write(valorBotaoVerde);
-    Serial.write(direcao);
-    Serial.write(saida);
+    Serial.write(valorVolante);
+    Serial.write(valorAcelera);
     Serial.write(">");
 
     //
